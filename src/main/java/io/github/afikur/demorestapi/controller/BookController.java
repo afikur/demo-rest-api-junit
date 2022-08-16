@@ -1,5 +1,6 @@
 package io.github.afikur.demorestapi.controller;
 
+import io.github.afikur.demorestapi.exception.ResourceNotFoundException;
 import io.github.afikur.demorestapi.model.Book;
 import io.github.afikur.demorestapi.repository.BookRepository;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ public class BookController {
     @GetMapping(value = "/{bookId}")
     public Book getBookById(@PathVariable("bookId") Long bookId) {
         return bookRepository.findById(bookId)
-                .orElseThrow(() -> new IllegalArgumentException("Book id not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Book id not found"));
     }
 
     @PostMapping
@@ -37,12 +38,20 @@ public class BookController {
     @PutMapping(value = "/{bookId}")
     public Book updateBook(@PathVariable("bookId") Long bookId, @RequestBody @Valid Book book) {
         Book bookRecord = bookRepository.findById(bookId)
-                .orElseThrow(() -> new IllegalArgumentException("Book id not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Book id not found"));
 
         bookRecord.setName(book.getName());
         bookRecord.setSummary(book.getSummary());
         bookRecord.setRating(book.getRating());
 
         return bookRepository.save(bookRecord);
+    }
+
+    @DeleteMapping(value = "/{bookId}")
+    public void deleteBook(@PathVariable("bookId") Long bookId) {
+        Book bookRecord = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book id not found"));
+
+        bookRepository.delete(bookRecord);
     }
 }

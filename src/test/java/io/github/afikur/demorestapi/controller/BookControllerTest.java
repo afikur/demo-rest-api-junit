@@ -13,8 +13,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
@@ -39,7 +38,7 @@ public class BookControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    public void testFindAllBooks() throws Exception {
+    public void findAllBooks_ShouldReturnAllBooks() throws Exception {
         List<Book> bookList = List.of(
                 new Book(1L, "Junit in action", "Book on unit testing framework", 5),
                 new Book(2L, "Spring Microservices in action", "Book on microservice in spring cloud", 5)
@@ -47,11 +46,7 @@ public class BookControllerTest {
 
         when(bookRepository.findAll()).thenReturn(bookList);
 
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get("/books")
-                .accept(MediaType.APPLICATION_JSON);
-
-        mockMvc.perform(requestBuilder)
+        mockMvc.perform(get("/books"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -61,20 +56,18 @@ public class BookControllerTest {
     }
 
     @Test
-    public void testAddBook() throws Exception {
+    public void addBook_ShouldCreateANewBook() throws Exception {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
         when(bookRepository.save(any(Book.class))).thenReturn(book);
 
         String bookJson = "{\"name\":\"Junit in action\",\"summary\":\"Book on unit testing framework\",\"rating\":5}";
 
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
-                .post("/books")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(bookJson);
-
         mockMvc
-                .perform(requestBuilder)
+                .perform(post("/books")
+                        .content(bookJson)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                )
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.bookId", Matchers.anything()))
@@ -82,16 +75,12 @@ public class BookControllerTest {
     }
 
     @Test
-    public void testGetBoookById() throws Exception {
+    public void getBookById_ShouldReturnBookDetails() throws Exception {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
         when(bookRepository.findById(anyLong())).thenReturn(Optional.of(book));
 
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get("/books/1")
-                .contentType(MediaType.APPLICATION_JSON);
-
         mockMvc
-                .perform(requestBuilder)
+                .perform(get("/books/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", notNullValue()))
@@ -99,7 +88,7 @@ public class BookControllerTest {
     }
 
     @Test
-    public void testUpdateBook() throws Exception {
+    public void updateBook_ShouldUpdateABookDetails() throws Exception {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
         Book updatedBook = new Book(1L, "Junit in action updated", "Book on unit testing framework", 5);
 
@@ -108,14 +97,11 @@ public class BookControllerTest {
 
         String bookJson = "{\"name\":\"Junit in action updated\",\"summary\":\"Book on unit testing framework\",\"rating\":5}";
 
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
-                .put("/books/1")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(bookJson);
-
         mockMvc
-                .perform(requestBuilder)
+                .perform(put("/books/1")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookJson))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", notNullValue()))
@@ -123,7 +109,7 @@ public class BookControllerTest {
     }
 
     @Test
-    public void testUpdateBook_whenBookIdNotFound() throws Exception {
+    public void updateBookWithWrongId_ShouldReturnNotFound() throws Exception {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
         Book updatedBook = new Book(1L, "Junit in action updated", "Book on unit testing framework", 5);
 
@@ -131,14 +117,11 @@ public class BookControllerTest {
 
         String bookJson = "{\"name\":\"Junit in action updated\",\"summary\":\"Book on unit testing framework\",\"rating\":5}";
 
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
-                .put("/books/1")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(bookJson);
-
         mockMvc
-                .perform(requestBuilder)
+                .perform(put("/books/1")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookJson))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof ResourceNotFoundException));
 
@@ -146,17 +129,13 @@ public class BookControllerTest {
     }
 
     @Test
-    public void testDeleteBookById() throws Exception {
+    public void deleteBook_ShouldDeleteABook() throws Exception {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
 
         when(bookRepository.findById(anyLong())).thenReturn(Optional.of(book));
 
-        RequestBuilder requestBuilder = MockMvcRequestBuilders
-                .delete("/books/1")
-                .contentType(MediaType.APPLICATION_JSON);
-
         mockMvc
-                .perform(requestBuilder)
+                .perform(delete("/books/1"))
                 .andExpect(status().isOk());
 
         verify(bookRepository).delete(book);

@@ -21,6 +21,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -44,7 +46,7 @@ public class BookControllerTest {
                 new Book(2L, "Spring Microservices in action", "Book on microservice in spring cloud", 5)
         );
 
-        when(bookRepository.findAll()).thenReturn(bookList);
+        given(bookRepository.findAll()).willReturn(bookList);
 
         mockMvc.perform(get("/books"))
                 .andExpect(status().isOk())
@@ -58,7 +60,7 @@ public class BookControllerTest {
     @Test
     public void addBook_ShouldCreateANewBook() throws Exception {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
-        when(bookRepository.save(any(Book.class))).thenReturn(book);
+        given(bookRepository.save(any(Book.class))).willReturn(book);
 
         String bookJson = "{\"name\":\"Junit in action\",\"summary\":\"Book on unit testing framework\",\"rating\":5}";
 
@@ -77,7 +79,7 @@ public class BookControllerTest {
     @Test
     public void getBookById_ShouldReturnBookDetails() throws Exception {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
-        when(bookRepository.findById(anyLong())).thenReturn(Optional.of(book));
+        given(bookRepository.findById(anyLong())).willReturn(Optional.of(book));
 
         mockMvc
                 .perform(get("/books/1"))
@@ -92,8 +94,8 @@ public class BookControllerTest {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
         Book updatedBook = new Book(1L, "Junit in action updated", "Book on unit testing framework", 5);
 
-        when(bookRepository.findById(anyLong())).thenReturn(Optional.of(book));
-        when(bookRepository.save(any(Book.class))).thenReturn(updatedBook);
+        given(bookRepository.findById(anyLong())).willReturn(Optional.of(book));
+        given(bookRepository.save(any(Book.class))).willReturn(updatedBook);
 
         String bookJson = "{\"name\":\"Junit in action updated\",\"summary\":\"Book on unit testing framework\",\"rating\":5}";
 
@@ -113,7 +115,7 @@ public class BookControllerTest {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
         Book updatedBook = new Book(1L, "Junit in action updated", "Book on unit testing framework", 5);
 
-        when(bookRepository.findById(anyLong())).thenThrow(ResourceNotFoundException.class);
+        given(bookRepository.findById(anyLong())).willThrow(ResourceNotFoundException.class);
 
         String bookJson = "{\"name\":\"Junit in action updated\",\"summary\":\"Book on unit testing framework\",\"rating\":5}";
 
@@ -125,19 +127,23 @@ public class BookControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof ResourceNotFoundException));
 
-        verify(bookRepository, never()).save(book);
+        then(bookRepository)
+                .should(never())
+                .save(book);
     }
 
     @Test
     public void deleteBook_ShouldDeleteABook() throws Exception {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
 
-        when(bookRepository.findById(anyLong())).thenReturn(Optional.of(book));
+        given(bookRepository.findById(anyLong())).willReturn(Optional.of(book));
 
         mockMvc
                 .perform(delete("/books/1"))
                 .andExpect(status().isOk());
 
-        verify(bookRepository).delete(book);
+        then(bookRepository)
+                .should()
+                .delete(book);
     }
 }

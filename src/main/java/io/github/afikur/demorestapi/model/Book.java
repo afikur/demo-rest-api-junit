@@ -31,6 +31,12 @@ public class Book {
         this.rating = rating;
     }
 
+    public Book(String name, String summary, int rating) {
+        this.name = name;
+        this.summary = summary;
+        this.rating = rating;
+    }
+
     public Long getBookId() {
         return bookId;
     }

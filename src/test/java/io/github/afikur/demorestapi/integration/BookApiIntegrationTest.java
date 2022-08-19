@@ -17,12 +17,12 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@Sql(scripts = {"/book-schema.sql", "/book-data.sql"})
 public class BookApiIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Test
+    @Sql(scripts = {"/book-data.sql"})
     public void getBook_returnsBookDetails() {
         ResponseEntity<Book> response = restTemplate
                 .getForEntity("/books/1", Book.class);
@@ -53,5 +53,37 @@ public class BookApiIntegrationTest extends AbstractIntegrationTest {
             assertEquals(response.getBody().getName(), "Junit in action");
             assertEquals(response.getBody().getRating(), 5);
         });
+    }
+
+    @Test
+    @Sql(scripts = {"/book-data.sql"})
+    public void updateBook_ShouldUpdateTheBookDetails() {
+        Book book = new Book("Junit in action updated", "Book on unit testing framework", 4);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+        HttpEntity<Book> entity = new HttpEntity<>(book, headers);
+
+        ResponseEntity<Book> response = restTemplate
+                .exchange("/books/1", HttpMethod.PUT, entity, Book.class);
+
+        assertAll(() -> {
+            assertEquals(response.getStatusCode(), HttpStatus.OK);
+            assertEquals(response.getBody().getName(), "Junit in action updated");
+            assertEquals(response.getBody().getRating(), 4);
+        });
+    }
+
+    @Test
+    @Sql(scripts = {"/book-data.sql"})
+    public void deleteBook_ShouldDeleteBook() {
+        restTemplate.delete("/books/2");
+
+        ResponseEntity<Book> response = restTemplate
+                .getForEntity("/books/2", Book.class);
+
+        assertEquals(response.getStatusCode(), HttpStatus.NOT_FOUND);
     }
 }

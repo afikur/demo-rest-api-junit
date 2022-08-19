@@ -146,4 +146,20 @@ public class BookControllerTest {
                 .should()
                 .delete(book);
     }
+
+    @Test
+    public void deleteBookWithInvalidId_ShouldThrowResourceNotFoundException() throws Exception {
+        Book book = new Book(1000L, "Junit in action", "Book on unit testing framework", 5);
+
+        given(bookRepository.findById(anyLong())).willThrow(ResourceNotFoundException.class);
+
+        mockMvc
+                .perform(delete("/books/1000"))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ResourceNotFoundException));
+
+        then(bookRepository)
+                .should(never())
+                .delete(book);
+    }
 }

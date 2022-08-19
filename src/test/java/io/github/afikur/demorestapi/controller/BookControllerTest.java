@@ -1,5 +1,6 @@
 package io.github.afikur.demorestapi.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.afikur.demorestapi.exception.ResourceNotFoundException;
 import io.github.afikur.demorestapi.model.Book;
 import io.github.afikur.demorestapi.repository.BookRepository;
@@ -39,6 +40,8 @@ public class BookControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    ObjectMapper objectMapper = new ObjectMapper();
+
     @Test
     public void findAllBooks_ShouldReturnAllBooks() throws Exception {
         List<Book> bookList = List.of(
@@ -62,7 +65,8 @@ public class BookControllerTest {
         Book book = new Book(1L, "Junit in action", "Book on unit testing framework", 5);
         given(bookRepository.save(any(Book.class))).willReturn(book);
 
-        String bookJson = "{\"name\":\"Junit in action\",\"summary\":\"Book on unit testing framework\",\"rating\":5}";
+        Book bookToSave = new Book("Junit in action", "Book on unit testing framework", 5);
+        String bookJson = objectMapper.writeValueAsString(bookToSave);
 
         mockMvc
                 .perform(post("/books")
@@ -72,8 +76,8 @@ public class BookControllerTest {
                 )
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.bookId", Matchers.anything()))
-                .andExpect(jsonPath("$.name", is("Junit in action")));
+                .andExpect(jsonPath("$.bookId", is(1)))
+                .andExpect(jsonPath("$.name", is(book.getName())));
     }
 
     @Test
@@ -97,7 +101,7 @@ public class BookControllerTest {
         given(bookRepository.findById(anyLong())).willReturn(Optional.of(book));
         given(bookRepository.save(any(Book.class))).willReturn(updatedBook);
 
-        String bookJson = "{\"name\":\"Junit in action updated\",\"summary\":\"Book on unit testing framework\",\"rating\":5}";
+        String bookJson = objectMapper.writeValueAsString(book);
 
         mockMvc
                 .perform(put("/books/1")
@@ -117,7 +121,7 @@ public class BookControllerTest {
 
         given(bookRepository.findById(anyLong())).willThrow(ResourceNotFoundException.class);
 
-        String bookJson = "{\"name\":\"Junit in action updated\",\"summary\":\"Book on unit testing framework\",\"rating\":5}";
+        String bookJson = objectMapper.writeValueAsString(book);
 
         mockMvc
                 .perform(put("/books/1")

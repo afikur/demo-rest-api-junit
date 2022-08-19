@@ -10,14 +10,17 @@ import org.testcontainers.containers.MySQLContainer;
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
+    static final MySQLContainer MY_SQL_CONTAINER;
 
-    static MySQLContainer container = new MySQLContainer("mysql:8");
+    static {
+        MY_SQL_CONTAINER = new MySQLContainer("mysql:8");
+        MY_SQL_CONTAINER.start();
+    }
 
     @DynamicPropertySource
     public static void overrideProps(DynamicPropertyRegistry registry) {
-        container.start();
-        registry.add("spring.datasource.url", container::getJdbcUrl);
-        registry.add("spring.datasource.username", container::getUsername);
-        registry.add("spring.datasource.password", container::getPassword);
+        registry.add("spring.datasource.url", MY_SQL_CONTAINER::getJdbcUrl);
+        registry.add("spring.datasource.username", MY_SQL_CONTAINER::getUsername);
+        registry.add("spring.datasource.password", MY_SQL_CONTAINER::getPassword);
     }
 }

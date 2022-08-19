@@ -17,21 +17,26 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = {"/book-schema.sql", "/book-data.sql"})
+@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = {"/book-schema.sql"})
 public class BookRepositoryTest extends AbstractIntegrationTest {
     @Autowired
     private BookRepository bookRepository;
 
     @Test
     public void getBook_returnsBookDetails() {
-        Book book = bookRepository
-                .findById(1L)
+        Book book = new Book("The Alchemist", "The Alchemist is a novel by Brazilian author Paulo Coelho " +
+                "which was first published in 1988. Originally written in Portuguese", 5);
+
+        bookRepository.save(book);
+
+        Book savedBook = bookRepository
+                .findById(book.getBookId())
                 .orElse(null);
 
         assertAll(() -> {
-            assertNotNull(book);
-            assertEquals("Junit in action", book.getName());
-            assertEquals(5, book.getRating());
+            assertNotNull(savedBook);
+            assertEquals(book.getName(), savedBook.getName());
+            assertEquals(book.getRating(), savedBook.getRating());
         });
     }
 

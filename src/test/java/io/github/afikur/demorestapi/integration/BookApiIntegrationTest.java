@@ -1,7 +1,7 @@
 package io.github.afikur.demorestapi.integration;
 
 import io.github.afikur.demorestapi.model.Book;
-import io.github.afikur.demorestapi.testcontainer.AbstractIntegrationTest;
+import io.github.afikur.demorestapi.testcontainer.MySQLContainerInitializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-public class BookApiIntegrationTest extends AbstractIntegrationTest {
+public class BookApiIntegrationTest implements MySQLContainerInitializer {
     @Autowired
     private TestRestTemplate restTemplate;
 
